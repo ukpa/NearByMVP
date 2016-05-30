@@ -1,4 +1,4 @@
-package me.unnikrishnanpatel.nearbymvp;
+package me.unnikrishnanpatel.nearbymvp.mainActivity;
 
 import android.Manifest;
 import android.content.Context;
@@ -23,48 +23,23 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener {
+import me.unnikrishnanpatel.nearbymvp.R;
+
+public class MainActivity extends AppCompatActivity implements MainViewContract {
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 11;
-    private GoogleApiClient mGoogleApiClient;
-    private LocationRequest mLocationRequest;
-    private Location mCurrentLocation;
-    private TextView mLocationView;
+    Location mCurrentLocation;
+    TextView mLocationView;
+    MainPresenter mainPresenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mLocationView = (TextView)findViewById(R.id.locationView);
-        buildApi();
+        mainPresenter = new MainPresenter(this);
+        mainPresenter.buildApi(this);
 
     }
-
-    void buildApi() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this).
-                addConnectionCallbacks(this).
-                addOnConnectionFailedListener(this).
-                addApi(LocationServices.API).
-                build();
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-    }
-
-    void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)!= PackageManager.PERMISSION_GRANTED ) {
-
-
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_LOCATION);
-
-        }else{
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        }
-
-    }
-
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -73,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             case MY_PERMISSIONS_REQUEST_LOCATION: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED ) {
-                    startLocationUpdates();
+                    mainPresenter.startLocationUpdates();
 
                 } else {}
                 return;
@@ -83,41 +58,46 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     @Override
     protected void onStart() {
-        mGoogleApiClient.connect();
+       mainPresenter.connectApi();
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        mGoogleApiClient.disconnect();
+        mainPresenter.disconnectApi();
         super.onStop();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(mGoogleApiClient.isConnected()){
-            startLocationUpdates();
-        }
+        mainPresenter.resumeUpdates();
+    }
+
+
+
+    @Override
+    public Context getAppContext() {
+        return getApplicationContext();
     }
 
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        startLocationUpdates();
+    public Context getActivityContext() {
+        return this;
     }
 
     @Override
-    public void onConnectionSuspended(int i) {
+    public void updatePermissions() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                MY_PERMISSIONS_REQUEST_LOCATION);
 
     }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
+    public void catchLocation(Location location) {
+        mCurrentLocation = location;
         mLocationView.setText(String.valueOf(location));
     }
+
 }
