@@ -1,7 +1,6 @@
 package me.unnikrishnanpatel.nearbymvp.mainActivity;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -26,20 +25,21 @@ import java.lang.ref.WeakReference;
 public class MainPresenter implements MainContract,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener{
+        LocationListener, DataToPresenterContract {
 
     WeakReference<MainViewContract> mainViewContractWeakReference;
     GoogleApiClient mGoogleApiClient;
     LocationRequest mLocationRequest;
+    DataProvider dataProvider;
+
     public MainPresenter(MainViewContract mainViewContract) {
         mainViewContractWeakReference = new WeakReference<MainViewContract>(mainViewContract);
     }
 
-    public MainViewContract getView() throws NullPointerException{
-        if(mainViewContractWeakReference!=null){
+    public MainViewContract getView() throws NullPointerException {
+        if (mainViewContractWeakReference != null) {
             return mainViewContractWeakReference.get();
-        }
-        else{
+        } else {
             throw new NullPointerException("View is unavailable");
         }
     }
@@ -68,7 +68,7 @@ public class MainPresenter implements MainContract,
 
     @Override
     public void resumeUpdates() {
-        if(mGoogleApiClient.isConnected()){
+        if (mGoogleApiClient.isConnected()) {
             startLocationUpdates();
         }
 
@@ -92,7 +92,23 @@ public class MainPresenter implements MainContract,
 
     @Override
     public void onLocationChanged(Location location) {
-        getView().catchLocation(location);
+
+        if (ActivityCompat.checkSelfPermission(getView().getActivityContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getView().getActivityContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+        }
+        else{
+            if (LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient) == null || LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient).getLongitude() != location.getLongitude()
+                    && LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient).getLatitude() != location.getLatitude()) {
+
+                getView().catchLocation(location);
+                dataProvider = new DataProvider();
+                String loc = location.getLatitude() + "," + location.getLongitude();
+                dataProvider.fetchData(loc);
+            } else {
+                getView().catchLocation(location);
+            }
+
+        }
 
     }
 
