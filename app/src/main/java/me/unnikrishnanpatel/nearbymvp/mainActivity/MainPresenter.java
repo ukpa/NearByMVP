@@ -1,9 +1,11 @@
 package me.unnikrishnanpatel.nearbymvp.mainActivity;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -94,10 +96,15 @@ public class MainPresenter implements MainContract,
 
     }
 
-    void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(getView().getActivityContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getView().getActivityContext(), Manifest.permission.ACCESS_COARSE_LOCATION)!= PackageManager.PERMISSION_GRANTED ) {
-            getView().updatePermissions();
 
+    void startLocationUpdates() {
+        if(Build.VERSION.SDK_INT>=23){
+            if (ActivityCompat.checkSelfPermission(getView().getActivityContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getView().getActivityContext(), Manifest.permission.ACCESS_COARSE_LOCATION)!= PackageManager.PERMISSION_GRANTED ) {
+                getView().updatePermissions();
+
+            }else{
+                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            }
         }else{
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
         }
