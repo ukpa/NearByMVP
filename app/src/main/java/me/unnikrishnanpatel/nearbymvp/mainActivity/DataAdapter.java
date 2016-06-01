@@ -1,6 +1,7 @@
 package me.unnikrishnanpatel.nearbymvp.mainActivity;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -72,11 +73,13 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.ViewHolder> {
         holder.distance.setText(String.valueOf(formattedValue)+" miles away");
         if(String.valueOf(mDataset.get(position).get("now")).equals("true")){
             holder.now.setText("Open");
+            holder.now.setTextColor(Color.parseColor("#006400"));
         }else if(String.valueOf(mDataset.get(position).get("now")).equals("No Data")){
             holder.now.setText("--");
         }
         else{
             holder.now.setText("Closed");
+            holder.now.setTextColor(Color.RED);
         }
 
     }
