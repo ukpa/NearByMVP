@@ -12,5 +12,6 @@ public interface MainContract {
     public void connectApi();
     public void disconnectApi();
     public void resumeUpdates();
+    public void offlineFeed();
 
 }

@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -17,6 +18,11 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 /**
  * Created by unnikrishnanpatel on 31/05/16.
@@ -31,6 +37,7 @@ public class MainPresenter implements MainContract,
     GoogleApiClient mGoogleApiClient;
     LocationRequest mLocationRequest;
     DataProvider dataProvider;
+    Realm realm;
 
     public MainPresenter(MainViewContract mainViewContract) {
         mainViewContractWeakReference = new WeakReference<MainViewContract>(mainViewContract);
@@ -75,6 +82,43 @@ public class MainPresenter implements MainContract,
     }
 
     @Override
+    public void offlineFeed() {
+        realm = Realm.getDefaultInstance();
+        ArrayList<HashMap<String,String>> vList = new ArrayList<>();
+        RealmResults<Venues> realmResults = realm.where(Venues.class).findAll().sort("distance");
+        for(int i=0;i<realmResults.size();i++){
+            HashMap<String,String> hashMap = new HashMap<>();
+            hashMap.put("id",realmResults.get(i).getId());
+            hashMap.put("name",realmResults.get(i).getName());
+            hashMap.put("category",realmResults.get(i).getCategory());
+            hashMap.put("distance",String.valueOf(realmResults.get(i).getDistance()));
+            hashMap.put("url",realmResults.get(i).getUrl());
+            hashMap.put("now",realmResults.get(i).getNow());
+            vList.add(hashMap);
+        }
+        getView().feedAdapter(vList);
+    }
+
+    @Override
+    public void getDataFromDatabase() {
+        realm = Realm.getDefaultInstance();
+        ArrayList<HashMap<String,String>> vList = new ArrayList<>();
+        RealmResults<Venues> realmResults = realm.where(Venues.class).findAll().sort("distance");
+        for(int i=0;i<realmResults.size();i++){
+            HashMap<String,String> hashMap = new HashMap<>();
+            hashMap.put("id",realmResults.get(i).getId());
+            hashMap.put("name",realmResults.get(i).getName());
+            hashMap.put("category",realmResults.get(i).getCategory());
+            hashMap.put("distance",String.valueOf(realmResults.get(i).getDistance()));
+            hashMap.put("url",realmResults.get(i).getUrl());
+            hashMap.put("now",realmResults.get(i).getNow());
+            vList.add(hashMap);
+        }
+        getView().feedAdapter(vList);
+
+    }
+
+    @Override
     public void onConnected(@Nullable Bundle bundle) {
         startLocationUpdates();
 
@@ -101,11 +145,12 @@ public class MainPresenter implements MainContract,
                     && LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient).getLatitude() != location.getLatitude()) {
 
                 getView().catchLocation(location);
-                dataProvider = new DataProvider();
+                dataProvider = new DataProvider(this);
                 String loc = location.getLatitude() + "," + location.getLongitude();
                 dataProvider.fetchData(loc);
+
             } else {
-                getView().catchLocation(location);
+                Log.d("shajhsjahsjahsja","called");
             }
 
         }

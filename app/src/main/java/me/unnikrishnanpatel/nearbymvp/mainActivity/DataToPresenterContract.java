@@ -5,5 +5,6 @@ package me.unnikrishnanpatel.nearbymvp.mainActivity;
  */
 
 public interface DataToPresenterContract {
+    public void getDataFromDatabase();
 
 }

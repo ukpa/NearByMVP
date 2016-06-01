@@ -14,6 +14,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -23,21 +25,31 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 import me.unnikrishnanpatel.nearbymvp.R;
 
 public class MainActivity extends AppCompatActivity implements MainViewContract {
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 11;
     Location mCurrentLocation;
-    TextView mLocationView;
     MainPresenter mainPresenter;
+    RecyclerView recyclerView;
+    DataAdapter dataAdapter;
+    RecyclerView.LayoutManager layoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mLocationView = (TextView)findViewById(R.id.locationView);
         mainPresenter = new MainPresenter(this);
         mainPresenter.buildApi(this);
+        recyclerView =  (RecyclerView)findViewById(R.id.recyclerview);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mainPresenter.offlineFeed();
+
 
     }
 
@@ -94,10 +106,21 @@ public class MainActivity extends AppCompatActivity implements MainViewContract 
 
     }
 
+
+
     @Override
     public void catchLocation(Location location) {
         mCurrentLocation = location;
-        mLocationView.setText(String.valueOf(location));
+    }
+
+    @Override
+    public void feedAdapter(final ArrayList<HashMap<String,String>> venues) {
+        MainActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                recyclerView.setAdapter(new DataAdapter(venues,MainActivity.this));
+            }
+        });
     }
 
 }
